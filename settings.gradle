@@ -1,0 +1,3 @@
+rootProject.name='teamcity-azure-storage'
+
+include 'azure-storage-agent', 'azure-storage-common', 'azure-storage-server'

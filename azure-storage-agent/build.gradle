@@ -1,0 +1,21 @@
+plugins {
+    id 'com.github.rodm.teamcity-agent' version "0.11"
+}
+
+teamcity {
+    version = teamcityVersion
+    descriptor {
+        pluginDeployment {
+            useSeparateClassloader = true
+        }
+    }
+}
+
+dependencies {
+    compile project(':azure-storage-common')
+    compile "org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}"
+    compile "com.microsoft.azure:azure-storage:5.0.0"
+}
+
+agentPlugin.version = null
+agentPlugin.baseName = projectIds.artifact

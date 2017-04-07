@@ -1,0 +1,31 @@
+plugins {
+    id "org.jetbrains.kotlin.jvm" version "1.1.1"
+}
+
+ext {
+    def correctVersion = project.hasProperty('versionNumber') && property('versionNumber') ==~ /\d+\.\d+\.\d+.*/
+    versionNumber = correctVersion ? property('versionNumber') : 'SNAPSHOT-' + new Date().format('yyyyMMddHHmmss')
+    projectIds = ['group': 'teamcity-azure-storage', 'version': versionNumber, 'artifact': 'azure-artifact-storage']
+    teamcityVersion = project.hasProperty('teamcityVersion') ? property('teamcityVersion') : '2017.1-SNAPSHOT'
+}
+
+group = projectIds.group
+version = projectIds.version
+
+allprojects {
+    group = projectIds.group
+    version = projectIds.version
+}
+
+subprojects {
+    apply plugin: "kotlin"
+    sourceCompatibility = 1.6
+    targetCompatibility = 1.6
+
+    test.useTestNG()
+    jar.version = null
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.2.1'
+}

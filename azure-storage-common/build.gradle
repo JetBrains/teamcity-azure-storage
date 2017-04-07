@@ -1,0 +1,12 @@
+plugins{
+    id 'com.github.rodm.teamcity-common' version "0.11"
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}"
+    compile "com.microsoft.azure:azure-storage:5.0.0"
+}
+
+teamcity {
+    version = teamcityVersion
+}
