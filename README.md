@@ -2,7 +2,7 @@
 
 <a href="https://teamcity.jetbrains.com/viewType.html?buildTypeId=TeamCityPluginsByJetBrains_TeamcityAzureStorage_Build&guest=1"><img src="https://teamcity.jetbrains.com/app/rest/builds/buildType:(id:TeamCityPluginsByJetBrains_TeamcityAzureStorage_Build)/statusIcon.svg" alt=""/></a>
 
-TeamCity Azure Storage Plugin is an implementation of external storage for TeamCity [build artifacts](https://confluence.jetbrains.com/display/TCDL/Build+Artifact) in Azure Blob Storage.
+This plugin allows replacing the TeamCity built-in artifacts storage by [Azure Blob storage](https://azure.microsoft.com/en-us/services/storage/blobs/). The artifacts storage can be changed at the project level. After changing the storage, new artifacts produced by the builds of this project will be published to the Azure Blob storage account. Besides publishing, the plugin also implements resolving of artifact dependencies and clean-up of build artifacts.
 
 # State
 
