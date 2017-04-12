@@ -12,6 +12,7 @@ import jetbrains.buildServer.artifacts.ServerArtifactStorageSettingsProvider
 import jetbrains.buildServer.log.Loggers
 import jetbrains.buildServer.serverSide.SBuild
 import jetbrains.buildServer.serverSide.artifacts.ServerArtifactHelper
+import jetbrains.buildServer.serverSide.artifacts.azure.AzureConstants
 import jetbrains.buildServer.serverSide.artifacts.azure.AzureUtils
 import jetbrains.buildServer.serverSide.cleanup.BuildCleanupContext
 import jetbrains.buildServer.serverSide.cleanup.BuildCleanupContextEx
@@ -19,12 +20,14 @@ import jetbrains.buildServer.serverSide.cleanup.CleanupExtension
 import jetbrains.buildServer.serverSide.cleanup.CleanupProcessState
 import jetbrains.buildServer.serverSide.impl.cleanup.HistoryRetentionPolicy
 import jetbrains.buildServer.util.StringUtil
+import jetbrains.buildServer.util.positioning.PositionAware
 import jetbrains.buildServer.util.positioning.PositionConstraint
-import jetbrains.buildServer.util.positioning.PositionConstraintAware
 
 class AzureCleanupExtension(private val helper: ServerArtifactHelper,
                             private val settingsProvider: ServerArtifactStorageSettingsProvider)
-    : CleanupExtension, PositionConstraintAware {
+    : CleanupExtension, PositionAware {
+
+    override fun getOrderId() = AzureConstants.STORAGE_TYPE
 
     override fun cleanupBuildsData(cleanupContext: BuildCleanupContext) {
         for (build in cleanupContext.builds) {
