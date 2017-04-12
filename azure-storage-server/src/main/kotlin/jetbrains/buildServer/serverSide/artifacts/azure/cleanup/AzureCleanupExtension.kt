@@ -57,7 +57,7 @@ class AzureCleanupExtension(private val helper: ServerArtifactHelper,
                 }
             }
 
-            val suffix = " from Azure Storage container [$container] from path [$pathPrefix]"
+            val suffix = " from Azure Storage container [${container.name}] from path [$pathPrefix]"
             Loggers.CLEANUP.info("Removed [" + succeededNum + "] Azure storage " + StringUtil.pluralize("blob", succeededNum) + suffix)
 
             helper.removeFromArtifactList(build, toDelete)
