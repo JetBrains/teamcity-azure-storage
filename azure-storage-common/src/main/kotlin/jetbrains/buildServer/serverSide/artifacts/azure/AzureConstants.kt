@@ -11,8 +11,10 @@ import jetbrains.buildServer.agent.Constants
 
 object AzureConstants {
     const val STORAGE_TYPE = "azure-storage"
+    const val SETTINGS_PATH = "azure_storage_settings"
     const val PARAM_ACCOUNT_NAME = "account-name"
     const val PARAM_ACCOUNT_KEY = Constants.SECURE_PROPERTY_PREFIX + "account-key"
+    const val PARAM_CONTAINER_NAME = "container-name"
     const val PATH_PREFIX_ATTR = "azure_path_prefix"
     const val PATH_PREFIX_SYSTEM_PROPERTY = "storage.azure.path.prefix"
     const val URL_LIFETIME_SEC = "storage.azure.url.expiration.time.seconds"

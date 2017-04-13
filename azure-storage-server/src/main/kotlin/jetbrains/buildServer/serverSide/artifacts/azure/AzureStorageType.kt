@@ -27,7 +27,7 @@ class AzureStorageType(registry: ArtifactStorageTypeRegistry,
 
     override fun getType() = AzureConstants.STORAGE_TYPE
 
-    override fun getEditStorageParametersPath() = descriptor.getPluginResourcesPath("azure_storage_settings.jsp")
+    override fun getEditStorageParametersPath() = descriptor.getPluginResourcesPath(AzureConstants.SETTINGS_PATH + ".jsp")
 
     override fun getParametersProcessor(): PropertiesProcessor? {
         return PropertiesProcessor {

@@ -129,6 +129,7 @@ class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener
      * Calculates path prefix.
      */
     private fun getPathPrefix(build: AgentRunningBuild): String {
+        // Try to get overriden path prefix
         val pathSegments = (build.sharedConfigParameters[PATH_PREFIX_SYSTEM_PROPERTY] ?: "")
                 .trim()
                 .replace('\\', SLASH)
@@ -136,12 +137,19 @@ class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener
                 .filter { it.isNotEmpty() }
                 .toMutableList()
 
+        // Set default path prefix
         if (pathSegments.isEmpty()) {
             build.sharedConfigParameters[ServerProvidedProperties.TEAMCITY_PROJECT_ID_PARAM]?.let {
                 pathSegments.add(it)
             }
             pathSegments.add(build.buildTypeExternalId)
             pathSegments.add(build.buildId.toString())
+        }
+
+        // Add container name if specified
+        val parameters = publisherParameters
+        parameters[AzureConstants.PARAM_CONTAINER_NAME]?.let {
+            pathSegments.add(0, it)
         }
 
         // Sanitize container name: length < 64, lowercase, alphanumeric and dash

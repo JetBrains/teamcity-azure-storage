@@ -27,6 +27,10 @@ object AzureUtils {
             result[AzureConstants.PARAM_ACCOUNT_KEY] = it
         }
 
+        parameters[AzureConstants.PARAM_CONTAINER_NAME]?.trim()?.let {
+            result[AzureConstants.PARAM_CONTAINER_NAME] = it
+        }
+
         return result
     }
 

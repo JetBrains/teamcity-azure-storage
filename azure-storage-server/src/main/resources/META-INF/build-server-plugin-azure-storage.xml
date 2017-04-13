@@ -4,5 +4,6 @@
     <bean class="jetbrains.buildServer.serverSide.artifacts.azure.AzureStorageType"/>
     <bean class="jetbrains.buildServer.serverSide.artifacts.azure.AzureArtifactContentProvider"/>
     <bean class="jetbrains.buildServer.serverSide.artifacts.azure.cleanup.AzureCleanupExtension"/>
+    <bean class="jetbrains.buildServer.serverSide.artifacts.azure.web.AzureSettingsController"/>
     <bean class="jetbrains.buildServer.serverSide.artifacts.azure.web.AzureArtifactDownloadProcessor"/>
 </beans>
