@@ -7,16 +7,15 @@
 
 package jetbrains.buildServer.serverSide.artifacts.azure.web
 
-import com.microsoft.azure.storage.StorageException
-import jetbrains.buildServer.controllers.*
+import jetbrains.buildServer.controllers.ActionErrors
+import jetbrains.buildServer.controllers.BaseFormXmlController
+import jetbrains.buildServer.controllers.BasePropertiesBean
 import jetbrains.buildServer.serverSide.SBuildServer
 import jetbrains.buildServer.serverSide.artifacts.azure.AzureConstants
 import jetbrains.buildServer.serverSide.artifacts.azure.AzureUtils
-import jetbrains.buildServer.util.ExceptionUtil
 import jetbrains.buildServer.web.openapi.PluginDescriptor
 import jetbrains.buildServer.web.openapi.WebControllerManager
 import org.jdom.Element
-import java.net.UnknownHostException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
@@ -51,14 +50,7 @@ class AzureSettingsController(server: SBuildServer,
             }
             xmlResponse.addContent(containersElement)
         } catch (e: Throwable) {
-            val storageException = ExceptionUtil.getCause(e, StorageException::class.java)
-            val message = if (storageException != null) {
-                val hostException = ExceptionUtil.getCause(e, UnknownHostException::class.java)
-                hostException?.toString() ?: storageException.message
-            } else {
-                e.message
-            }
-
+            val message = AzureUtils.getExceptionMessage(e)
             errors.addError(AzureConstants.PARAM_ACCOUNT_KEY, message)
         }
 

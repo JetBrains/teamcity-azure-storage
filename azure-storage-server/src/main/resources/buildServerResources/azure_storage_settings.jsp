@@ -29,7 +29,6 @@
                 <props:passwordProperty name="${params.accountKey}" className="longField"/>
             </div>
             <span class="error" id="error_${params.accountKey}"></span>
-            <span class="error" id="error_${params.containerName}"></span>
             <span class="smallNote">Specify the key to access storage account.</span>
         </td>
     </tr>
@@ -71,7 +70,7 @@
             .then(function (response) {
                 var $response = $j(response);
                 var errors = getErrors($response);
-                $j(BS.Util.escapeId('error_${params.containerName}')).text(errors);
+                $j(BS.Util.escapeId('error_${params.accountKey}')).text(errors);
 
                 if (errors) {
                     return;

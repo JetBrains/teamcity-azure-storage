@@ -32,12 +32,33 @@ class AzureStorageType(registry: ArtifactStorageTypeRegistry,
     override fun getParametersProcessor(): PropertiesProcessor? {
         return PropertiesProcessor {
             val invalidProperties = arrayListOf<InvalidProperty>()
-            if (it[AzureConstants.PARAM_ACCOUNT_NAME].isNullOrEmpty()) {
-                invalidProperties.add(InvalidProperty(AzureConstants.PARAM_ACCOUNT_NAME, EMPTY_VALUE))
+            val parameters = hashMapOf<String, String>()
+
+            AzureConstants.PARAM_ACCOUNT_NAME.apply {
+                if (it[this].isNullOrEmpty()) {
+                    invalidProperties.add(InvalidProperty(this, EMPTY_VALUE))
+                } else {
+                    parameters[this] = it[this]!!
+                }
             }
-            if (it[AzureConstants.PARAM_ACCOUNT_KEY].isNullOrEmpty()) {
-                invalidProperties.add(InvalidProperty(AzureConstants.PARAM_ACCOUNT_KEY, EMPTY_VALUE))
+
+            AzureConstants.PARAM_ACCOUNT_KEY.apply {
+                if (it[this].isNullOrEmpty()) {
+                    invalidProperties.add(InvalidProperty(this, EMPTY_VALUE))
+                } else {
+                    parameters[this] = it[this]!!
+                }
             }
+
+            if (parameters.size == 2) {
+                try {
+                    AzureUtils.getBlobClient(parameters).downloadServiceProperties()
+                } catch (e: Throwable) {
+                    val message = AzureUtils.getExceptionMessage(e)
+                    invalidProperties.add(InvalidProperty(AzureConstants.PARAM_ACCOUNT_KEY, message))
+                }
+            }
+
             invalidProperties
         }
     }

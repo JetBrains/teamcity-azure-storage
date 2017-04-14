@@ -9,8 +9,10 @@ package jetbrains.buildServer.serverSide.artifacts.azure
 
 import com.microsoft.azure.storage.CloudStorageAccount
 import com.microsoft.azure.storage.StorageCredentialsAccountAndKey
+import com.microsoft.azure.storage.StorageException
 import com.microsoft.azure.storage.blob.CloudBlobClient
 import com.microsoft.azure.storage.blob.CloudBlockBlob
+import java.net.UnknownHostException
 
 object AzureUtils {
     /**
@@ -41,8 +43,8 @@ object AzureUtils {
     }
 
     fun getBlobClient(parameters: Map<String, String>): CloudBlobClient {
-        val accountName = parameters[AzureConstants.PARAM_ACCOUNT_NAME]
-        val accountKey = parameters[AzureConstants.PARAM_ACCOUNT_KEY]
+        val accountName = parameters[AzureConstants.PARAM_ACCOUNT_NAME]?.trim()
+        val accountKey = parameters[AzureConstants.PARAM_ACCOUNT_KEY]?.trim()
         return CloudStorageAccount(StorageCredentialsAccountAndKey(accountName, accountKey)).createCloudBlobClient()
     }
 
@@ -60,6 +62,27 @@ object AzureUtils {
         return pathSegments.first() to pathSegments
                 .takeLast(pathSegments.size - 1)
                 .joinToString("$FORWARD_SLASH", postfix = "$FORWARD_SLASH")
+    }
+
+    fun getExceptionMessage(exception: Throwable): String {
+        val e = if (exception is NoSuchElementException)
+            exception.cause ?: exception else exception
+        return when (e) {
+            is StorageException -> {
+                if (e.cause is UnknownHostException) {
+                    "Invalid account name: ${e.cause?.message}"
+                } else {
+                    "Invalid account key"
+                }
+            }
+            is StringIndexOutOfBoundsException,
+            is IllegalArgumentException -> {
+                "Invalid account key"
+            }
+            else -> {
+                e.message ?: e.toString()
+            }
+        }
     }
 
     const val FORWARD_SLASH = '/'
