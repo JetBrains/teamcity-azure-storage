@@ -32,14 +32,9 @@ class AzureSettingsController(server: SBuildServer,
 
     override fun doPost(request: HttpServletRequest, response: HttpServletResponse, xmlResponse: Element) {
         val errors = ActionErrors()
-        val props = getProperties(request)
-        val accountName = props[AzureConstants.PARAM_ACCOUNT_NAME] ?: ""
-        val accountKey = props[AzureConstants.PARAM_ACCOUNT_KEY] ?: ""
+        val parameters = getProperties(request)
 
         try {
-            val parameters = hashMapOf(
-                    AzureConstants.PARAM_ACCOUNT_NAME to accountName,
-                    AzureConstants.PARAM_ACCOUNT_KEY to accountKey)
             val client = AzureUtils.getBlobClient(parameters)
             val containers = client.listContainers().toList()
             val containersElement = Element("containers")
