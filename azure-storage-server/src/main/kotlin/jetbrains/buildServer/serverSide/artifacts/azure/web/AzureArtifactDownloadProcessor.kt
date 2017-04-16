@@ -71,8 +71,9 @@ class AzureArtifactDownloadProcessor : ArtifactDownloadProcessor {
 
     private fun getIdentity(params: Map<String, String>, path: String): String {
         return StringBuilder().apply {
-            append(params[AzureConstants.PARAM_ACCOUNT_NAME])
-            append(params[AzureConstants.PARAM_ACCOUNT_KEY])
+            append(params[AzureConstants.PARAM_ACCOUNT_NAME] ?: "")
+            append(params[AzureConstants.PARAM_ACCOUNT_KEY] ?: "")
+            append(params[AzureConstants.PARAM_CONTAINER_NAME] ?: "")
             append(path)
         }.toString().toLowerCase().hashCode().toString()
     }
