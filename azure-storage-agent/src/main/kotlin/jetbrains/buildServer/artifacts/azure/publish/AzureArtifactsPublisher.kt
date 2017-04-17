@@ -22,6 +22,7 @@ import jetbrains.buildServer.util.EventDispatcher
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
+import java.net.URI
 
 class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener>,
                               private val helper: AgentArtifactHelper,
@@ -67,7 +68,7 @@ class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener
                 }
 
                 filesToPublish.forEach { (file, path) ->
-                    val filePath = if (path.isEmpty()) file.name else "$path$SLASH${file.name}"
+                    val filePath = preparePath(path, file)
                     val blobName = pathPrefix + filePath
                     val blob = container.getBlockBlobReference(blobName)
 
@@ -94,6 +95,17 @@ class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener
         }
 
         return filesToPublish.size
+    }
+
+    private fun preparePath(path: String, file: File): String {
+        if (path.startsWith(".."))
+            throw IOException("Attempting to publish artifact outside of build artifacts directory. Specified target path: \"$path\"")
+
+        return if (path.isEmpty()) {
+            file.name
+        } else {
+            URI("$path$SLASH${file.name}").normalize().path
+        }
     }
 
     override fun getType() = AzureConstants.STORAGE_TYPE
