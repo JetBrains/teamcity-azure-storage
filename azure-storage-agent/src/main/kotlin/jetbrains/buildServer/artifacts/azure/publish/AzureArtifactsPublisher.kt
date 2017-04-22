@@ -68,8 +68,8 @@ class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener
                 }
 
                 filesToPublish.forEach { (file, path) ->
-                    val filePath = preparePath(path, file)
-                    val blobName = pathPrefix + filePath
+                    val filePath = preparePath(path, file.name)
+                    val blobName = preparePath(pathPrefix, filePath)
                     val blob = container.getBlockBlobReference(blobName)
 
                     FileInputStream(file).use {
@@ -97,11 +97,11 @@ class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener
         return filesToPublish.size
     }
 
-    private fun preparePath(path: String, file: File): String {
+    private fun preparePath(path: String, fileName: String): String {
         return if (path.isEmpty()) {
-            file.name
+            fileName
         } else {
-            FileUtil.normalizeRelativePath("$path$SLASH${file.name}")
+            FileUtil.normalizeRelativePath("$path$SLASH$fileName")
         }
     }
 
@@ -138,27 +138,36 @@ class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener
      * Calculates path prefix.
      */
     private fun getPathPrefix(build: AgentRunningBuild): String {
-        // Try to get overriden path prefix
-        val pathSegments = (build.sharedConfigParameters[PATH_PREFIX_SYSTEM_PROPERTY] ?: "")
-                .trim()
-                .replace('\\', SLASH)
-                .split(SLASH)
-                .filter { it.isNotEmpty() }
-                .toMutableList()
+        val pathSegments = arrayListOf<String>()
 
-        // Set default path prefix
-        if (pathSegments.isEmpty()) {
+        // Try to get overriden path prefix
+        val pathPrefix = build.sharedConfigParameters[PATH_PREFIX_SYSTEM_PROPERTY]
+        if (pathPrefix == null) {
+            // Set default path prefix
             build.sharedConfigParameters[ServerProvidedProperties.TEAMCITY_PROJECT_ID_PARAM]?.let {
                 pathSegments.add(it)
             }
             pathSegments.add(build.buildTypeExternalId)
             pathSegments.add(build.buildId.toString())
+        } else {
+            pathSegments.addAll(pathPrefix
+                    .trim()
+                    .replace('\\', SLASH)
+                    .split(SLASH)
+                    .filter { it.isNotEmpty() })
         }
 
         // Add container name if specified
         val parameters = publisherParameters
         parameters[AzureConstants.PARAM_CONTAINER_NAME]?.let {
             pathSegments.add(0, it)
+        }
+
+        // Container name must be specified
+        if (pathSegments.isEmpty()) {
+            build.sharedConfigParameters[ServerProvidedProperties.TEAMCITY_PROJECT_ID_PARAM]?.let {
+                pathSegments.add(it)
+            }
         }
 
         // Sanitize container name: length < 64, lowercase, alphanumeric and dash

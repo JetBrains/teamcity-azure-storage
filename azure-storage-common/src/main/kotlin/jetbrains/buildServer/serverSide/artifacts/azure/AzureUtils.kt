@@ -50,18 +50,19 @@ object AzureUtils {
 
     fun getBlobReference(parameters: Map<String, String>, path: String): CloudBlockBlob {
         val client = AzureUtils.getBlobClient(parameters)
-        val pathSegments = path.split(FORWARD_SLASH)
-        val container = client.getContainerReference(pathSegments.first())
-        val blobPath = pathSegments.takeLast(pathSegments.size - 1).joinToString("$FORWARD_SLASH")
+        val (containerName, blobPath) = getContainerAndPath(path)
+                ?: throw IllegalArgumentException("Path should not be empty")
+        val container = client.getContainerReference(containerName)
         return container.getBlockBlobReference(blobPath)
     }
 
     fun getContainerAndPath(pathPrefix: String): Pair<String, String>? {
-        val pathSegments = pathPrefix.split(FORWARD_SLASH)
+        val pathSegments = pathPrefix.split(FORWARD_SLASH).filter { it.isNotEmpty() }
         if (pathSegments.isEmpty()) return null
         return pathSegments.first() to pathSegments
                 .takeLast(pathSegments.size - 1)
-                .joinToString("$FORWARD_SLASH", postfix = "$FORWARD_SLASH")
+                .joinToString("$FORWARD_SLASH")
+                .trimStart(FORWARD_SLASH)
     }
 
     fun getExceptionMessage(exception: Throwable): String {
