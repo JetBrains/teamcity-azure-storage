@@ -8,7 +8,6 @@
 package jetbrains.buildServer.artifacts.azure.publish
 
 import com.intellij.openapi.diagnostic.Logger
-import com.microsoft.azure.storage.StorageException
 import jetbrains.buildServer.ArtifactsConstants
 import jetbrains.buildServer.agent.*
 import jetbrains.buildServer.agent.artifacts.AgentArtifactHelper
@@ -80,17 +79,12 @@ class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener
                     }
                 }
             } catch (e: Throwable) {
-                val message = "Failed to publish files"
+                val message = AzureUtils.getExceptionMessage(e)
+
                 LOG.warnAndDebugDetails(message, e)
+                build.buildLogger.error(message)
 
-                if (e is StorageException) {
-                    e.extendedErrorInformation?.errorMessage?.let {
-                        LOG.warn(it)
-                        build.buildLogger.error(it)
-                    }
-                }
-
-                throw ArtifactPublishingFailedException("$message: ${e.message}", false, e)
+                throw ArtifactPublishingFailedException(message, false, e)
             }
         }
 
