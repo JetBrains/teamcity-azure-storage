@@ -21,6 +21,7 @@ import jetbrains.buildServer.util.EventDispatcher
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
+import java.net.URLConnection
 
 class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener>,
                               private val helper: AgentArtifactHelper,
@@ -69,6 +70,9 @@ class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener
                     val filePath = AzureUtils.appendPathPrefix(path, file.name)
                     val blobName = AzureUtils.appendPathPrefix(pathPrefix, filePath)
                     val blob = container.getBlockBlobReference(blobName)
+                    URLConnection.guessContentTypeFromName(file.name)?.let {
+                        blob.properties.contentType = it
+                    }
 
                     FileInputStream(file).use {
                         val length = file.length()
