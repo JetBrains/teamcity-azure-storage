@@ -44,7 +44,8 @@ class AzureCleanupExtension(private val helper: ServerArtifactHelper,
 
             val container = client.getContainerReference(containerName)
             val blobs = toDelete.map {
-                container.getBlockBlobReference(path + it)
+                val blobPath = AzureUtils.appendPathPrefix(path, it)
+                container.getBlockBlobReference(blobPath)
             }
 
             var succeededNum = 0

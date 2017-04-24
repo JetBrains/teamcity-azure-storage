@@ -18,7 +18,6 @@ import jetbrains.buildServer.serverSide.artifacts.azure.AzureConstants.PATH_PREF
 import jetbrains.buildServer.serverSide.artifacts.azure.AzureConstants.PATH_PREFIX_SYSTEM_PROPERTY
 import jetbrains.buildServer.serverSide.artifacts.azure.AzureUtils
 import jetbrains.buildServer.util.EventDispatcher
-import jetbrains.buildServer.util.FileUtil
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
@@ -67,8 +66,8 @@ class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener
                 }
 
                 filesToPublish.forEach { (file, path) ->
-                    val filePath = preparePath(path, file.name)
-                    val blobName = preparePath(pathPrefix, filePath)
+                    val filePath = AzureUtils.appendPathPrefix(path, file.name)
+                    val blobName = AzureUtils.appendPathPrefix(pathPrefix, filePath)
                     val blob = container.getBlockBlobReference(blobName)
 
                     FileInputStream(file).use {
@@ -89,14 +88,6 @@ class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener
         }
 
         return filesToPublish.size
-    }
-
-    private fun preparePath(path: String, fileName: String): String {
-        return if (path.isEmpty()) {
-            fileName
-        } else {
-            FileUtil.normalizeRelativePath("$path$SLASH$fileName")
-        }
     }
 
     override fun getType() = AzureConstants.STORAGE_TYPE

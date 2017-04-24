@@ -12,6 +12,7 @@ import com.microsoft.azure.storage.StorageCredentialsAccountAndKey
 import com.microsoft.azure.storage.StorageException
 import com.microsoft.azure.storage.blob.CloudBlobClient
 import com.microsoft.azure.storage.blob.CloudBlockBlob
+import jetbrains.buildServer.util.FileUtil
 import java.net.UnknownHostException
 
 object AzureUtils {
@@ -63,6 +64,15 @@ object AzureUtils {
                 .takeLast(pathSegments.size - 1)
                 .joinToString("$FORWARD_SLASH")
                 .trimStart(FORWARD_SLASH)
+    }
+
+    fun appendPathPrefix(pathPrefix: String, fileName: String): String {
+        val path = pathPrefix.trimEnd(FORWARD_SLASH)
+        return if (path.isEmpty()) {
+            fileName
+        } else {
+            FileUtil.normalizeRelativePath("$path$FORWARD_SLASH$fileName")
+        }
     }
 
     fun getExceptionMessage(exception: Throwable): String {
