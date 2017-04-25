@@ -70,6 +70,7 @@ class AzureCleanupExtension(private val helper: ServerArtifactHelper,
     override fun getConstraint() = PositionConstraint.first()
 
     private fun getPatternsForBuild(cleanupContext: BuildCleanupContext, build: SBuild): String {
+        if (cleanupContext.cleanupLevel.isCleanHistoryEntry) return StringUtil.EMPTY
         val policy = cleanupContext.getCleanupPolicyForBuild(build.buildId)
         return StringUtil.emptyIfNull(policy.parameters[HistoryRetentionPolicy.ARTIFACT_PATTERNS_PARAM])
     }
