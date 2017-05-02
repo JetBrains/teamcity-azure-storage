@@ -23,7 +23,7 @@ You can [download the plugin](https://plugins.jetbrains.com/plugin/9617-azure-ar
 
 # Compatibility
 
-The plugin is compatible with [TeamCity](https://www.jetbrains.com/teamcity/download/) 2017.1 and greater.
+The plugin is compatible with [TeamCity](https://www.jetbrains.com/teamcity/download/) **2017.1.1** and greater.
 
 # Configuring 
 
