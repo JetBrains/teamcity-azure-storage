@@ -46,7 +46,8 @@ object AzureUtils {
     fun getBlobClient(parameters: Map<String, String>): CloudBlobClient {
         val accountName = parameters[AzureConstants.PARAM_ACCOUNT_NAME]?.trim()
         val accountKey = parameters[AzureConstants.PARAM_ACCOUNT_KEY]?.trim()
-        return CloudStorageAccount(StorageCredentialsAccountAndKey(accountName, accountKey)).createCloudBlobClient()
+        val credentials = StorageCredentialsAccountAndKey(accountName, accountKey)
+        return CloudStorageAccount(credentials, true).createCloudBlobClient()
     }
 
     fun getBlobReference(parameters: Map<String, String>, path: String): CloudBlockBlob {
