@@ -5,7 +5,7 @@
         <name>azure-storage</name>
         <display-name>Azure Artifact Storage</display-name>
         <version>@Plugin_Version@</version>
-        <description>Allows to store build artifacts in an Azure storage account</description>
+        <description>Allows storing build artifacts in an Azure storage account</description>
         <download-url>https://github.com/JetBrains/teamcity-azure-storage</download-url>
         <vendor>
             <name>JetBrains, s.r.o.</name>
