@@ -8,6 +8,7 @@
 package jetbrains.buildServer.artifacts.azure.publish
 
 import com.intellij.openapi.diagnostic.Logger
+import com.microsoft.azure.storage.blob.BlobRequestOptions
 import jetbrains.buildServer.ArtifactsConstants
 import jetbrains.buildServer.agent.*
 import jetbrains.buildServer.agent.artifacts.AgentArtifactHelper
@@ -76,7 +77,10 @@ class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener
 
                     FileInputStream(file).use {
                         val length = file.length()
-                        blob.upload(it, length)
+                        blob.upload(it, length, null, BlobRequestOptions().apply {
+                            this.concurrentRequestCount = 8
+                            this.timeoutIntervalInMs = 30_000
+                        }, null)
                         val artifact = ArtifactDataInstance.create(filePath, length)
                         publishedArtifacts.add(artifact)
                     }
