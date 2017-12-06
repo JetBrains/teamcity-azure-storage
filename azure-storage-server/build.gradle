@@ -1,5 +1,5 @@
 plugins {
-    id 'com.github.rodm.teamcity-server' version "0.11"
+    id 'com.github.rodm.teamcity-server' version "1.0"
 }
 
 teamcity {
@@ -12,8 +12,8 @@ teamcity {
 
 dependencies {
     compile project(':azure-storage-common')
-    compile "org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}"
-    compile "com.microsoft.azure:azure-storage:5.0.0"
+    compile "org.jetbrains.kotlin:kotlin-stdlib"
+    compile "com.microsoft.azure:azure-storage:${azureStorageVersion}"
     provided "org.jetbrains.teamcity:server-api:${teamcityVersion}"
     provided "org.jetbrains.teamcity.internal:server:${teamcityVersion}"
 
