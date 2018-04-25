@@ -36,10 +36,6 @@ class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener
             override fun buildStarted(build: AgentRunningBuild) {
                 publishedArtifacts.clear()
             }
-
-            override fun afterAtrifactsPublished(build: AgentRunningBuild, status: BuildFinishedStatus) {
-                publishArtifactsList(build)
-            }
         })
     }
 
@@ -93,6 +89,7 @@ class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener
 
                 throw ArtifactPublishingFailedException(message, false, e)
             }
+            publishArtifactsList(build)
         }
 
         return filesToPublish.size
