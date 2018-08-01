@@ -6,10 +6,6 @@ https://teamcity.jetbrains.com/app/rest/builds/buildType:(id:TeamCityPluginsByJe
 
 This plugin allows replacing the TeamCity built-in artifacts storage by [Azure Blob storage](https://azure.microsoft.com/en-us/services/storage/blobs/). The artifacts storage can be changed at the project level. After changing the storage, new artifacts produced by the builds of this project will be published to the Azure Blob storage account. Besides publishing, the plugin also implements resolving of artifact dependencies and clean-up of build artifacts.
 
-# State
-
-The plugin has complete baseline functionality, but it is not yet ready to be used in production and further plugin updates may break backward compatibility (regarding settings, data storage, etc.).
- 
 # Features
 
 When installed and configured, the plugin:
