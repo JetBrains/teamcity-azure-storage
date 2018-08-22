@@ -4,10 +4,8 @@ plugins {
 
 teamcity {
     version = teamcityVersion
-    descriptor {
-        pluginDeployment {
-            useSeparateClassloader = true
-        }
+    agent {
+        descriptor = project.file('teamcity-plugin.xml')
     }
 }
 
