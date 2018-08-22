@@ -5,6 +5,7 @@ plugins{
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib"
     compile "com.microsoft.azure:azure-storage:${azureStorageVersion}"
+    testCompile 'org.testng:testng:6.8'
 }
 
 teamcity {

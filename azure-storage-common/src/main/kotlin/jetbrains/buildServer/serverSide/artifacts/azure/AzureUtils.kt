@@ -13,6 +13,9 @@ import com.microsoft.azure.storage.StorageException
 import com.microsoft.azure.storage.blob.CloudBlobClient
 import com.microsoft.azure.storage.blob.CloudBlockBlob
 import jetbrains.buildServer.util.FileUtil
+import java.io.File
+import java.lang.reflect.Method
+import java.net.URLConnection
 import java.net.UnknownHostException
 
 object AzureUtils {
@@ -97,5 +100,39 @@ object AzureUtils {
         }
     }
 
-    const val FORWARD_SLASH = '/'
+    fun getContentType(file: File): String {
+        URLConnection.guessContentTypeFromName(file.name)?.let {
+            return it
+        }
+        probeContentTypeMethod?.let { contentTypeMethod ->
+            try {
+                File::class.java.getMethod("toPath")?.let { toPathMethod ->
+                    contentTypeMethod.invoke(null, toPathMethod.invoke(file))?.let {
+                        if (it is String) {
+                            return it
+                        }
+                    }
+                }
+            } catch (ignored: Exception) {
+                ignored.printStackTrace()
+            }
+        }
+        return DEFAULT_CONTENT_TYPE
+    }
+
+    private fun getProbeContentTypeMethod(): Method? {
+        try {
+            val filesClass = Class.forName("java.nio.file.Files")
+            val pathClass = Class.forName("java.nio.file.Path")
+            if (filesClass != null && pathClass != null) {
+                return filesClass.getMethod("probeContentType", pathClass)
+            }
+        } catch (ignored: Exception) {
+        }
+        return null
+    }
+
+    private const val FORWARD_SLASH = '/'
+    private const val DEFAULT_CONTENT_TYPE = "application/octet-stream"
+    private val probeContentTypeMethod: Method? = getProbeContentTypeMethod()
 }
