@@ -104,17 +104,14 @@ object AzureUtils {
         URLConnection.guessContentTypeFromName(file.name)?.let {
             return it
         }
-        probeContentTypeMethod?.let { contentTypeMethod ->
+        if (probeContentTypeMethod != null && fileToPathMethod != null) {
             try {
-                File::class.java.getMethod("toPath")?.let { toPathMethod ->
-                    contentTypeMethod.invoke(null, toPathMethod.invoke(file))?.let {
-                        if (it is String) {
-                            return it
-                        }
+                probeContentTypeMethod.invoke(null, fileToPathMethod.invoke(file))?.let {
+                    if (it is String) {
+                        return it
                     }
                 }
             } catch (ignored: Exception) {
-                ignored.printStackTrace()
             }
         }
         return DEFAULT_CONTENT_TYPE
@@ -132,7 +129,16 @@ object AzureUtils {
         return null
     }
 
+    private fun getFileToPathMethod(): Method? {
+        try {
+            return File::class.java.getMethod("toPath")
+        } catch (ignored: Exception) {
+        }
+        return null
+    }
+
     private const val FORWARD_SLASH = '/'
     private const val DEFAULT_CONTENT_TYPE = "application/octet-stream"
     private val probeContentTypeMethod: Method? = getProbeContentTypeMethod()
+    private val fileToPathMethod: Method? = getFileToPathMethod()
 }
