@@ -6,7 +6,7 @@ ext {
     def correctVersion = project.hasProperty('versionNumber') && property('versionNumber') ==~ /\d+\.\d+\.\d+.*/
     versionNumber = correctVersion ? property('versionNumber') : 'SNAPSHOT-' + new Date().format('yyyyMMddHHmmss')
     projectIds = ['group': 'teamcity-azure-storage', 'version': versionNumber, 'artifact': 'azure-artifact-storage']
-    teamcityVersion = project.hasProperty('teamcityVersion') ? property('teamcityVersion') : '2017.1.1-SNAPSHOT'
+    teamcityVersion = project.hasProperty('teamcityVersion') ? property('teamcityVersion') : '2019.2-SNAPSHOT'
 }
 
 group = projectIds.group
