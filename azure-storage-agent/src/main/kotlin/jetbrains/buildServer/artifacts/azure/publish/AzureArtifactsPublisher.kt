@@ -76,11 +76,12 @@ class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener
                     val blobName = AzureUtils.appendPathPrefix(pathPrefix, filePath)
                     val blob = container.getBlockBlobReference(blobName)
                     blob.properties.contentType = AzureUtils.getContentType(file)
+                    blob.streamWriteSizeInBytes = AzureUtils.getWriteBufferSize()
 
                     FileInputStream(file).use {
                         val length = file.length()
                         blob.upload(it, length, null, BlobRequestOptions().apply {
-                            this.concurrentRequestCount = 8
+                            this.concurrentRequestCount = AzureUtils.getWriteConcurrentRequestCount()
                             this.timeoutIntervalInMs = 30_000
                         }, null)
                         val artifact = ArtifactDataInstance.create(filePath, length)

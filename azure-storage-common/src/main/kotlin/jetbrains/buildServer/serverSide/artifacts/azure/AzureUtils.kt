@@ -21,7 +21,9 @@ import com.microsoft.azure.storage.StorageCredentialsAccountAndKey
 import com.microsoft.azure.storage.StorageException
 import com.microsoft.azure.storage.blob.CloudBlobClient
 import com.microsoft.azure.storage.blob.CloudBlockBlob
+import jetbrains.buildServer.serverSide.TeamCityProperties
 import jetbrains.buildServer.util.FileUtil
+import org.springframework.util.StringUtils
 import java.io.File
 import java.lang.reflect.Method
 import java.net.URLConnection
@@ -50,6 +52,13 @@ object AzureUtils {
     }
 
     fun getPathPrefix(properties: Map<String, String>) = properties[AzureConstants.PATH_PREFIX_ATTR]
+
+    fun getWriteBufferSize() = TeamCityProperties.getInteger(AzureConstants.WRITE_BUFFER_SIZE_PROPERTY, AzureConstants.DEFAULT_WRITE_BUFFER_SIZE)
+
+    fun getWriteConcurrentRequestCount(): Int {
+        val defaultThreadCount = Runtime.getRuntime().availableProcessors()
+        return TeamCityProperties.getInteger(AzureConstants.WRITE_CONCURRENT_REQUEST_COUNT_PROPERTY, defaultThreadCount)
+    }
 
     fun getArtifactPath(properties: Map<String, String>, path: String): String {
         return getPathPrefix(properties) + FORWARD_SLASH + path
