@@ -50,7 +50,7 @@ class AzureArtifactDownloadProcessor : ArtifactDownloadProcessor {
         val path = AzureUtils.getArtifactPath(artifactInfo.commonProperties, artifactData.path)
         val lifeTime = urlLifeTime
 
-        val temporaryUrl = getTemporaryUrl(path, params, lifeTime)
+        val temporaryUrl = getTemporaryUrl(path, params, lifeTime * 2)
         response.setHeader(HttpHeaders.CACHE_CONTROL, "max-age=" + lifeTime)
         response.sendRedirect(temporaryUrl)
 
