@@ -48,10 +48,9 @@ class AzureArtifactDownloadProcessor : ArtifactDownloadProcessor {
 
         val params = AzureUtils.getParameters(artifactInfo.storageSettings)
         val path = AzureUtils.getArtifactPath(artifactInfo.commonProperties, artifactData.path)
-        val lifeTime = urlLifeTime
 
-        val temporaryUrl = getTemporaryUrl(path, params, lifeTime)
-        response.setHeader(HttpHeaders.CACHE_CONTROL, "max-age=" + lifeTime)
+        val temporaryUrl = getTemporaryUrl(path, params, urlLifeTime)
+        response.setHeader(HttpHeaders.CACHE_CONTROL, "max-age=" + httpCacheMaxAge)
         response.sendRedirect(temporaryUrl)
 
         return true
@@ -60,7 +59,10 @@ class AzureArtifactDownloadProcessor : ArtifactDownloadProcessor {
     override fun getType() = AzureConstants.STORAGE_TYPE
 
     private val urlLifeTime
-            get() = TeamCityProperties.getInteger(AzureConstants.URL_LIFETIME_SEC, AzureConstants.DEFAULT_URL_LIFETIME_SEC)
+        get() = TeamCityProperties.getInteger(AzureConstants.URL_LIFETIME_SEC, AzureConstants.DEFAULT_URL_LIFETIME_SEC)
+
+    private val httpCacheMaxAge
+        get() = TeamCityProperties.getInteger(AzureConstants.URL_HTTP_CACHE_MAX_AGE_SEC, AzureConstants.DEFAULT_URL_HTTP_CACHE_MAX_AGE_SEC)
 
     private fun getTemporaryUrl(path: String, parameters: Map<String, String>, lifeTime: Int): String {
         try {
