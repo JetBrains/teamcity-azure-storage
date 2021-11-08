@@ -36,7 +36,7 @@ import javax.servlet.http.HttpServletResponse
 
 class AzureArtifactDownloadProcessor : ArtifactDownloadProcessor {
     private val myLinksCache = CacheBuilder.newBuilder()
-            .expireAfterWrite(urlLifeTime.toLong(), TimeUnit.SECONDS)
+            .expireAfterWrite(httpCacheMaxAge.toLong(), TimeUnit.SECONDS)
             .maximumSize(100)
             .build<String, String>()
 
