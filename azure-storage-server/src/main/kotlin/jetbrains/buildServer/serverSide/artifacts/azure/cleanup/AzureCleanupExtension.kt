@@ -70,7 +70,7 @@ class AzureCleanupExtension(private val helper: ServerArtifactHelper,
                 Loggers.CLEANUP.info("Removed [" + succeededNum + "] Azure storage " + StringUtil.pluralize("blob",
                     succeededNum) + suffix)
             } else {
-                Loggers.CLEANUP.warn("Cannot find Azure storage parameters for build id=${build.buildId}. [${pathsToDelete.size}] build artifacts cannot be deleted")
+                Loggers.CLEANUP.warn("Cannot find Azure storage parameters for build id=${build.buildId}. [${pathsToDelete.size}] build artifacts at [$path] cannot be deleted")
             }
             helper.removeFromArtifactList(build, pathsToDelete)
         }
