@@ -46,27 +46,32 @@ class AzureCleanupExtension(private val helper: ServerArtifactHelper,
             if (pathsToDelete.isEmpty()) continue
 
             val parameters = settingsProvider.getStorageSettings(build)
-            val client = AzureUtils.getBlobClient(parameters)
 
-            val container = client.getContainerReference(containerName)
-            val blobs = pathsToDelete.map {
-                val blobPath = AzureUtils.appendPathPrefix(path, it)
-                container.getBlockBlobReference(blobPath)
-            }
+            if (AzureUtils.validateParameters(parameters)) {
+                val client = AzureUtils.getBlobClient(parameters)
 
-            var succeededNum = 0
-            blobs.forEach {
-                try {
-                    it.delete()
-                    succeededNum++
-                } catch (e: Throwable) {
-                    Loggers.CLEANUP.debug("Failed to remove ${it.uri} from Azure storage: ${e.message}")
+                val container = client.getContainerReference(containerName)
+                val blobs = pathsToDelete.map {
+                    val blobPath = AzureUtils.appendPathPrefix(path, it)
+                    container.getBlockBlobReference(blobPath)
                 }
+
+                var succeededNum = 0
+                blobs.forEach {
+                    try {
+                        it.delete()
+                        succeededNum++
+                    } catch (e: Throwable) {
+                        Loggers.CLEANUP.debug("Failed to remove ${it.uri} from Azure storage: ${e.message}")
+                    }
+                }
+
+                val suffix = " from account [${client.credentials.accountName}] from path [$pathPrefix]"
+                Loggers.CLEANUP.info("Removed [" + succeededNum + "] Azure storage " + StringUtil.pluralize("blob",
+                    succeededNum) + suffix)
+            } else {
+                Loggers.CLEANUP.warn("Cannot find Azure storage parameters for build id=${build.buildId}. [${pathsToDelete.size}] build artifacts cannot be deleted")
             }
-
-            val suffix = " from account [${client.credentials.accountName}] from path [$pathPrefix]"
-            Loggers.CLEANUP.info("Removed [" + succeededNum + "] Azure storage " + StringUtil.pluralize("blob", succeededNum) + suffix)
-
             helper.removeFromArtifactList(build, pathsToDelete)
         }
     }

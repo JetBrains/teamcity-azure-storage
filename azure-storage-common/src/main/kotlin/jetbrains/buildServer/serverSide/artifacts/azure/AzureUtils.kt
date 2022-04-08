@@ -23,7 +23,6 @@ import com.microsoft.azure.storage.blob.CloudBlobClient
 import com.microsoft.azure.storage.blob.CloudBlockBlob
 import jetbrains.buildServer.serverSide.TeamCityProperties
 import jetbrains.buildServer.util.FileUtil
-import org.springframework.util.StringUtils
 import java.io.File
 import java.lang.reflect.Method
 import java.net.URLConnection
@@ -49,6 +48,11 @@ object AzureUtils {
         }
 
         return result
+    }
+
+    fun validateParameters(parameters: Map<String, String>): Boolean {
+        return parameters.contains(AzureConstants.PARAM_ACCOUNT_NAME)
+                && parameters.contains(AzureConstants.PARAM_ACCOUNT_KEY)
     }
 
     fun getPathPrefix(properties: Map<String, String>) = properties[AzureConstants.PATH_PREFIX_ATTR]
