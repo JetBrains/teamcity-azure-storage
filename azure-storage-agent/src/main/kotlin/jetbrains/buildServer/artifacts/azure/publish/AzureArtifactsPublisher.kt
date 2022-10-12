@@ -19,7 +19,13 @@ package jetbrains.buildServer.artifacts.azure.publish
 import com.intellij.openapi.diagnostic.Logger
 import com.microsoft.azure.storage.blob.BlobRequestOptions
 import jetbrains.buildServer.ArtifactsConstants
-import jetbrains.buildServer.agent.*
+import jetbrains.buildServer.agent.AgentLifeCycleAdapter
+import jetbrains.buildServer.agent.AgentLifeCycleListener
+import jetbrains.buildServer.agent.AgentRunningBuild
+import jetbrains.buildServer.agent.ArtifactPublishingFailedException
+import jetbrains.buildServer.agent.ArtifactsPublisher
+import jetbrains.buildServer.agent.CurrentBuildTracker
+import jetbrains.buildServer.agent.ServerProvidedProperties
 import jetbrains.buildServer.agent.artifacts.AgentArtifactHelper
 import jetbrains.buildServer.artifacts.ArtifactDataInstance
 import jetbrains.buildServer.log.LogUtil
@@ -32,10 +38,11 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
 
-class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener>,
-                              private val helper: AgentArtifactHelper,
-                              private val tracker: CurrentBuildTracker)
-    : ArtifactsPublisher {
+class AzureArtifactsPublisher(
+    dispatcher: EventDispatcher<AgentLifeCycleListener>,
+    private val helper: AgentArtifactHelper,
+    private val tracker: CurrentBuildTracker
+) : ArtifactsPublisher {
 
     private val publishedArtifacts = arrayListOf<ArtifactDataInstance>()
 
@@ -63,8 +70,12 @@ class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener
 
                 val client = AzureUtils.getBlobClient(parameters)
                 val pathValue = getPathPrefixProperty(build)
-                val (containerName, pathPrefix) = AzureUtils.getContainerAndPath(pathValue) ?:
-                        throw ArtifactPublishingFailedException("Invalid $PATH_PREFIX_SYSTEM_PROPERTY build system property", false, null)
+                val (containerName, pathPrefix) = AzureUtils.getContainerAndPath(pathValue)
+                    ?: throw ArtifactPublishingFailedException(
+                        "Invalid $PATH_PREFIX_SYSTEM_PROPERTY build system property",
+                        false,
+                        null
+                    )
 
                 val container = client.getContainerReference(containerName)
                 if (publishedArtifacts.isEmpty()) {
@@ -80,10 +91,16 @@ class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener
 
                     FileInputStream(file).use {
                         val length = file.length()
-                        blob.upload(it, length, null, BlobRequestOptions().apply {
-                            this.concurrentRequestCount = AzureUtils.getWriteConcurrentRequestCount()
-                            this.timeoutIntervalInMs = 30_000
-                        }, null)
+                        blob.upload(
+                            it,
+                            length,
+                            null,
+                            BlobRequestOptions().apply {
+                                this.concurrentRequestCount = AzureUtils.getWriteConcurrentRequestCount()
+                                this.timeoutIntervalInMs = 30_000
+                            },
+                            null
+                        )
                         val artifact = ArtifactDataInstance.create(filePath, length)
                         publishedArtifacts.add(artifact)
                     }
@@ -127,8 +144,12 @@ class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener
     }
 
     private fun getPathPrefixProperty(build: AgentRunningBuild): String {
-        return build.sharedBuildParameters.systemProperties[PATH_PREFIX_SYSTEM_PROPERTY] ?:
-                throw ArtifactPublishingFailedException("No $PATH_PREFIX_SYSTEM_PROPERTY build system property found", false, null)
+        return build.sharedBuildParameters.systemProperties[PATH_PREFIX_SYSTEM_PROPERTY]
+            ?: throw ArtifactPublishingFailedException(
+                "No $PATH_PREFIX_SYSTEM_PROPERTY build system property found",
+                false,
+                null
+            )
     }
 
     /**
@@ -137,7 +158,7 @@ class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener
     private fun getPathPrefix(build: AgentRunningBuild): String {
         val pathSegments = arrayListOf<String>()
 
-        // Try to get overriden path prefix
+        // Try to get overridden path prefix
         val pathPrefix = build.sharedConfigParameters[PATH_PREFIX_SYSTEM_PROPERTY]
         if (pathPrefix == null) {
             // Set default path prefix
@@ -147,11 +168,13 @@ class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener
             pathSegments.add(build.buildTypeExternalId)
             pathSegments.add(build.buildId.toString())
         } else {
-            pathSegments.addAll(pathPrefix
+            pathSegments.addAll(
+                pathPrefix
                     .trim()
                     .replace('\\', SLASH)
                     .split(SLASH)
-                    .filter { it.isNotEmpty() })
+                    .filter { it.isNotEmpty() }
+            )
         }
 
         // Add container name if specified
@@ -169,17 +192,20 @@ class AzureArtifactsPublisher(dispatcher: EventDispatcher<AgentLifeCycleListener
 
         // Sanitize container name: length < 64, lowercase, alphanumeric and dash
         val firstSegment = CONTAINER_INVALID_CHARS_REGEX.replace(pathSegments.first(), "")
-        val containerName = firstSegment.substring(0, Math.min(firstSegment.length, 63)).toLowerCase()
+        val containerName = firstSegment.substring(0, firstSegment.length.coerceAtMost(63)).toLowerCase()
+        LOG.info("Current container name is '$containerName'")
 
         return pathSegments
-                .takeLast(pathSegments.size - 1)
-                .joinToString("$SLASH", prefix = "$containerName$SLASH")
+            .takeLast(pathSegments.size - 1)
+            .joinToString("$SLASH", prefix = "$containerName$SLASH")
     }
 
     companion object {
+        private const val ERROR_PUBLISHING_ARTIFACTS_LIST = "Error publishing artifacts list"
+        private const val SLASH = '/'
         private val LOG = Logger.getInstance(AzureArtifactsPublisher::class.java.name)
-        private val ERROR_PUBLISHING_ARTIFACTS_LIST = "Error publishing artifacts list"
-        private val CONTAINER_INVALID_CHARS_REGEX = Regex("[^a-z0-9-]", RegexOption.IGNORE_CASE)
-        private val SLASH = '/'
+
+        // there are some predefined container names, like $logs or $web, that starts with $
+        private val CONTAINER_INVALID_CHARS_REGEX = Regex("[^\$a-z0-9-]", RegexOption.IGNORE_CASE)
     }
 }
