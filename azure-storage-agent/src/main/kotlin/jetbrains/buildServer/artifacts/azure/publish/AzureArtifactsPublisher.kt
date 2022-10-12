@@ -193,6 +193,7 @@ class AzureArtifactsPublisher(
         // Sanitize container name: length < 64, lowercase, alphanumeric and dash
         val firstSegment = CONTAINER_INVALID_CHARS_REGEX.replace(pathSegments.first(), "")
         val containerName = firstSegment.substring(0, firstSegment.length.coerceAtMost(63)).toLowerCase()
+        LOG.info("Current container name is '$containerName'")
 
         return pathSegments
             .takeLast(pathSegments.size - 1)
@@ -203,6 +204,8 @@ class AzureArtifactsPublisher(
         private const val ERROR_PUBLISHING_ARTIFACTS_LIST = "Error publishing artifacts list"
         private const val SLASH = '/'
         private val LOG = Logger.getInstance(AzureArtifactsPublisher::class.java.name)
-        private val CONTAINER_INVALID_CHARS_REGEX = Regex("[^a-z0-9-]", RegexOption.IGNORE_CASE)
+
+        // there are some predefined container names, like $logs or $web, that starts with $
+        private val CONTAINER_INVALID_CHARS_REGEX = Regex("[^\$a-z0-9-]", RegexOption.IGNORE_CASE)
     }
 }
