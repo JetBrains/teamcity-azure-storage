@@ -83,7 +83,7 @@ class AzureArtifactsPublisher(
                             null,
                             BlobRequestOptions().apply {
                                 this.concurrentRequestCount = AzureUtils.getWriteConcurrentRequestCount()
-                                this.timeoutIntervalInMs = 30_000
+                                this.timeoutIntervalInMs = AzureUtils.getTimeoutIntervalInMs()
                             },
                             null
                         )

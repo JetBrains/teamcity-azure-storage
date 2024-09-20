@@ -19,4 +19,6 @@ object AzureConstants {
     const val WRITE_BUFFER_SIZE_PROPERTY = "storage.azure.write.buffer.size"
     const val DEFAULT_WRITE_BUFFER_SIZE = 0x40_0000
     const val WRITE_CONCURRENT_REQUEST_COUNT_PROPERTY = "storage.azure.write.concurrent.request.count"
+    const val DEFAULT_TIMEOUT_INTERVAL_IN_MS = 60_000
+    const val TIMEOUT_INTERVAL_PROPERTY = "storage.azure.write.timeout"
 }

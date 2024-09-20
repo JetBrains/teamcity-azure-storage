@@ -50,6 +50,8 @@ object AzureUtils {
         return TeamCityProperties.getInteger(AzureConstants.WRITE_CONCURRENT_REQUEST_COUNT_PROPERTY, defaultThreadCount)
     }
 
+    fun getTimeoutIntervalInMs(): Int = TeamCityProperties.getInteger(AzureConstants.TIMEOUT_INTERVAL_PROPERTY, AzureConstants.DEFAULT_TIMEOUT_INTERVAL_IN_MS)
+
     fun getArtifactPath(properties: Map<String, String>, path: String): String {
         return getPathPrefix(properties) + FORWARD_SLASH + path
     }
