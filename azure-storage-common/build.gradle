@@ -6,7 +6,9 @@ plugins {
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib"
-    compile "com.microsoft.azure:azure-storage:${azureStorageVersion}"
+    compile("com.azure:azure-storage-blob:${azureStorageBlobVersion}") {
+        exclude group: 'org.slf4j'
+    }
     testCompile 'org.testng:testng:6.8'
 }
 

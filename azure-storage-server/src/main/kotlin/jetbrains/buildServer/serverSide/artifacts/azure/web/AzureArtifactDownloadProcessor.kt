@@ -4,9 +4,8 @@ package jetbrains.buildServer.serverSide.artifacts.azure.web
 
 import com.google.common.cache.CacheBuilder
 import com.intellij.openapi.diagnostic.Logger
-import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature
-import com.microsoft.azure.storage.blob.SharedAccessBlobPermissions
-import com.microsoft.azure.storage.blob.SharedAccessBlobPolicy
+import com.azure.storage.blob.sas.BlobSasPermission
+import com.azure.storage.blob.sas.BlobServiceSasSignatureValues
 import jetbrains.buildServer.serverSide.BuildPromotion
 import jetbrains.buildServer.serverSide.TeamCityProperties
 import jetbrains.buildServer.serverSide.artifacts.StoredBuildArtifactInfo
@@ -15,7 +14,8 @@ import jetbrains.buildServer.serverSide.artifacts.azure.AzureUtils
 import jetbrains.buildServer.web.openapi.artifacts.ArtifactDownloadProcessor
 import org.springframework.http.HttpHeaders
 import java.io.IOException
-import java.util.*
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.concurrent.TimeUnit
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -53,11 +53,12 @@ class AzureArtifactDownloadProcessor : ArtifactDownloadProcessor {
     private fun getTemporaryUrl(path: String, parameters: Map<String, String>, lifeTime: Int): String {
         try {
             return myLinksCache.get(getIdentity(parameters, path), {
-                val blob = AzureUtils.getBlobReference(parameters, path)
-                val policy = createSharedAccessPolicy(lifeTime)
-                val sasToken = blob.generateSharedAccessSignature(policy, null)
-                val credentials = StorageCredentialsSharedAccessSignature(sasToken)
-                credentials.transformUri(blob.uri).toString()
+                val blobClient = AzureUtils.getBlobReference(parameters, path)
+                val expiryTime = OffsetDateTime.now(ZoneOffset.UTC).plusSeconds(lifeTime.toLong())
+                val permission = BlobSasPermission().setReadPermission(true)
+                val sasValues = BlobServiceSasSignatureValues(expiryTime, permission)
+                val sasToken = blobClient.generateSas(sasValues)
+                blobClient.blobUrl + "?" + sasToken
             })
         } catch (e: Throwable) {
             val message = "Failed to create URl for blob $path"
@@ -73,16 +74,6 @@ class AzureArtifactDownloadProcessor : ArtifactDownloadProcessor {
             append(params[AzureConstants.PARAM_CONTAINER_NAME] ?: "")
             append(path)
         }.toString().toLowerCase().hashCode().toString()
-    }
-
-    private fun createSharedAccessPolicy(expireTimeInSeconds: Int): SharedAccessBlobPolicy {
-        val cal = GregorianCalendar(TimeZone.getTimeZone("UTC"))
-        cal.time = Date()
-        cal.add(Calendar.SECOND, expireTimeInSeconds)
-        val policy = SharedAccessBlobPolicy()
-        policy.permissions = EnumSet.of(SharedAccessBlobPermissions.READ)
-        policy.sharedAccessExpiryTime = cal.time
-        return policy
     }
 
     companion object {

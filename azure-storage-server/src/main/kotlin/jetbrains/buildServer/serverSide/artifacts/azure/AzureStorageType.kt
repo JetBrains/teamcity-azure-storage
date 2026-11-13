@@ -47,7 +47,7 @@ class AzureStorageType(registry: ArtifactStorageTypeRegistry,
 
             if (parameters.size == 2) {
                 try {
-                    AzureUtils.getBlobClient(parameters).downloadServiceProperties()
+                    AzureUtils.getBlobClient(parameters).getProperties()
                 } catch (e: Throwable) {
                     val message = AzureUtils.getExceptionMessage(e)
                     invalidProperties.add(InvalidProperty(AzureConstants.PARAM_ACCOUNT_KEY, message))
