@@ -31,7 +31,7 @@ class AzureSettingsController(server: SBuildServer,
 
         try {
             val client = AzureUtils.getBlobClient(parameters)
-            val containers = client.listContainers().toList()
+            val containers = client.listBlobContainers().toList()
             val containersElement = Element("containers")
             containers.forEach {
                 containersElement.addContent(Element("container").apply {

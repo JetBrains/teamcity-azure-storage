@@ -3,7 +3,9 @@
 package jetbrains.buildServer.artifacts.azure.publish
 
 import com.intellij.openapi.diagnostic.Logger
-import com.microsoft.azure.storage.blob.BlobRequestOptions
+import com.azure.storage.blob.models.BlobHttpHeaders
+import com.azure.storage.blob.models.ParallelTransferOptions
+import com.azure.storage.blob.options.BlobUploadFromFileOptions
 import jetbrains.buildServer.ArtifactsConstants
 import jetbrains.buildServer.agent.AgentLifeCycleAdapter
 import jetbrains.buildServer.agent.AgentLifeCycleListener
@@ -21,8 +23,8 @@ import jetbrains.buildServer.serverSide.artifacts.azure.AzureConstants.PATH_PREF
 import jetbrains.buildServer.serverSide.artifacts.azure.AzureUtils
 import jetbrains.buildServer.util.EventDispatcher
 import java.io.File
-import java.io.FileInputStream
 import java.io.IOException
+import java.time.Duration
 
 class AzureArtifactsPublisher(
     dispatcher: EventDispatcher<AgentLifeCycleListener>,
@@ -54,7 +56,7 @@ class AzureArtifactsPublisher(
                     setPathPrefixProperty(build)
                 }
 
-                val client = AzureUtils.getBlobClient(parameters)
+                val serviceClient = AzureUtils.getBlobClient(parameters)
                 val pathValue = getPathPrefixProperty(build)
                 val (containerName, pathPrefix) = AzureUtils.getContainerAndPath(pathValue)
                     ?: throw ArtifactPublishingFailedException(
@@ -63,33 +65,27 @@ class AzureArtifactsPublisher(
                         null
                     )
 
-                val container = client.getContainerReference(containerName)
+                val containerClient = serviceClient.getBlobContainerClient(containerName)
                 if (publishedArtifacts.isEmpty()) {
-                    container.createIfNotExists()
+                    containerClient.createIfNotExists()
                 }
 
                 filesToPublish.forEach { (file, path) ->
                     val filePath = AzureUtils.appendPathPrefix(path, file.name)
                     val blobName = AzureUtils.appendPathPrefix(pathPrefix, filePath)
-                    val blob = container.getBlockBlobReference(blobName)
-                    blob.properties.contentType = AzureUtils.getContentType(file)
-                    blob.streamWriteSizeInBytes = AzureUtils.getWriteBufferSize()
+                    val blobClient = containerClient.getBlobClient(blobName)
 
-                    FileInputStream(file).use {
-                        val length = file.length()
-                        blob.upload(
-                            it,
-                            length,
-                            null,
-                            BlobRequestOptions().apply {
-                                this.concurrentRequestCount = AzureUtils.getWriteConcurrentRequestCount()
-                                this.timeoutIntervalInMs = AzureUtils.getTimeoutIntervalInMs()
-                            },
-                            null
-                        )
-                        val artifact = ArtifactDataInstance.create(filePath, length)
-                        publishedArtifacts.add(artifact)
-                    }
+                    val headers = BlobHttpHeaders().setContentType(AzureUtils.getContentType(file))
+                    val transferOptions = ParallelTransferOptions()
+                            .setBlockSizeLong(AzureUtils.getWriteBufferSize())
+                            .setMaxConcurrency(AzureUtils.getWriteConcurrentRequestCount())
+                    val uploadOptions = BlobUploadFromFileOptions(file.absolutePath)
+                            .setHeaders(headers)
+                            .setParallelTransferOptions(transferOptions)
+                    val timeout = Duration.ofMillis(AzureUtils.getTimeoutIntervalInMs().toLong())
+                    blobClient.uploadFromFileWithResponse(uploadOptions, timeout, null)
+                    val artifact = ArtifactDataInstance.create(filePath, file.length())
+                    publishedArtifacts.add(artifact)
                 }
             } catch (e: Throwable) {
                 val message = AzureUtils.getExceptionMessage(e)

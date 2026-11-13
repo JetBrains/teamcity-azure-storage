@@ -15,7 +15,9 @@ teamcity {
 dependencies {
     compile project(':azure-storage-common')
     compile "org.jetbrains.kotlin:kotlin-stdlib"
-    compile "com.microsoft.azure:azure-storage:${azureStorageVersion}"
+    compile("com.azure:azure-storage-blob:${azureStorageBlobVersion}") {
+        exclude group: 'org.slf4j'
+    }
     provided "org.jetbrains.teamcity:server-api:${teamcityVersion}"
     provided "org.jetbrains.teamcity.internal:server:${teamcityVersion}"
 

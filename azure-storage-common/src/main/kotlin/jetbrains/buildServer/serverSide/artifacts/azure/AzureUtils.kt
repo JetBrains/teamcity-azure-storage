@@ -2,11 +2,11 @@
 
 package jetbrains.buildServer.serverSide.artifacts.azure
 
-import com.microsoft.azure.storage.CloudStorageAccount
-import com.microsoft.azure.storage.StorageCredentialsAccountAndKey
-import com.microsoft.azure.storage.StorageException
-import com.microsoft.azure.storage.blob.CloudBlobClient
-import com.microsoft.azure.storage.blob.CloudBlockBlob
+import com.azure.storage.blob.BlobClient
+import com.azure.storage.blob.BlobServiceClient
+import com.azure.storage.blob.BlobServiceClientBuilder
+import com.azure.storage.blob.models.BlobStorageException
+import com.azure.storage.common.StorageSharedKeyCredential
 import jetbrains.buildServer.serverSide.TeamCityProperties
 import jetbrains.buildServer.util.FileUtil
 import java.io.File
@@ -43,7 +43,7 @@ object AzureUtils {
 
     fun getPathPrefix(properties: Map<String, String>) = properties[AzureConstants.PATH_PREFIX_ATTR]
 
-    fun getWriteBufferSize() = TeamCityProperties.getInteger(AzureConstants.WRITE_BUFFER_SIZE_PROPERTY, AzureConstants.DEFAULT_WRITE_BUFFER_SIZE)
+    fun getWriteBufferSize(): Long = TeamCityProperties.getInteger(AzureConstants.WRITE_BUFFER_SIZE_PROPERTY, AzureConstants.DEFAULT_WRITE_BUFFER_SIZE).toLong()
 
     fun getWriteConcurrentRequestCount(): Int {
         val defaultThreadCount = Runtime.getRuntime().availableProcessors()
@@ -56,19 +56,23 @@ object AzureUtils {
         return getPathPrefix(properties) + FORWARD_SLASH + path
     }
 
-    fun getBlobClient(parameters: Map<String, String>): CloudBlobClient {
+    fun getBlobClient(parameters: Map<String, String>): BlobServiceClient {
         val accountName = parameters[AzureConstants.PARAM_ACCOUNT_NAME]?.trim()
         val accountKey = parameters[AzureConstants.PARAM_ACCOUNT_KEY]?.trim()
-        val credentials = StorageCredentialsAccountAndKey(accountName, accountKey)
-        return CloudStorageAccount(credentials, true).createCloudBlobClient()
+        val credential = StorageSharedKeyCredential(accountName, accountKey)
+        val endpoint = "https://${accountName}.blob.core.windows.net"
+        return BlobServiceClientBuilder()
+                .endpoint(endpoint)
+                .credential(credential)
+                .buildClient()
     }
 
-    fun getBlobReference(parameters: Map<String, String>, path: String): CloudBlockBlob {
-        val client = AzureUtils.getBlobClient(parameters)
+    fun getBlobReference(parameters: Map<String, String>, path: String): BlobClient {
+        val serviceClient = getBlobClient(parameters)
         val (containerName, blobPath) = getContainerAndPath(path)
                 ?: throw IllegalArgumentException("Path should not be empty")
-        val container = client.getContainerReference(containerName)
-        return container.getBlockBlobReference(blobPath)
+        val containerClient = serviceClient.getBlobContainerClient(containerName)
+        return containerClient.getBlobClient(blobPath)
     }
 
     fun getContainerAndPath(pathPrefix: String): Pair<String, String>? {
@@ -93,7 +97,7 @@ object AzureUtils {
         val e = if (exception is NoSuchElementException)
             exception.cause ?: exception else exception
         return when (e) {
-            is StorageException -> {
+            is BlobStorageException -> {
                 if (e.cause is UnknownHostException) {
                     "Invalid account name: ${e.cause?.message}"
                 } else {

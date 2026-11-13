@@ -34,12 +34,12 @@ class AzureCleanupExtension(private val helper: ServerArtifactHelper,
             val parameters = settingsProvider.getStorageSettings(build)
 
             if (AzureUtils.validateParameters(parameters)) {
-                val client = AzureUtils.getBlobClient(parameters)
+                val serviceClient = AzureUtils.getBlobClient(parameters)
 
-                val container = client.getContainerReference(containerName)
+                val containerClient = serviceClient.getBlobContainerClient(containerName)
                 val blobs = pathsToDelete.map {
                     val blobPath = AzureUtils.appendPathPrefix(path, it)
-                    container.getBlockBlobReference(blobPath)
+                    containerClient.getBlobClient(blobPath)
                 }
 
                 var succeededNum = 0
@@ -48,11 +48,11 @@ class AzureCleanupExtension(private val helper: ServerArtifactHelper,
                         it.delete()
                         succeededNum++
                     } catch (e: Throwable) {
-                        Loggers.CLEANUP.debug("Failed to remove ${it.uri} from Azure storage: ${e.message}")
+                        Loggers.CLEANUP.debug("Failed to remove ${it.blobUrl} from Azure storage: ${e.message}")
                     }
                 }
 
-                val suffix = " from account [${client.credentials.accountName}] from path [$pathPrefix]"
+                val suffix = " from account [${serviceClient.accountName}] from path [$pathPrefix]"
                 Loggers.CLEANUP.info("Removed [" + succeededNum + "] Azure storage " + StringUtil.pluralize("blob",
                     succeededNum) + suffix)
             } else {
